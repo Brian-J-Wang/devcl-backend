@@ -1,0 +1,69 @@
+{
+    "owner": "6719e48f5300a16ab102fdf1",
+    "checklistName": "Some Project",
+    "version": "1.23.0",
+    "patchNotes": [
+        {
+            "_id": "671bd4b37f9e3fa2e8dac992",
+            "version": "1.0.0",
+            "content": [
+                "feat: added a thing",
+                "feat: added a new thing",
+                "fix: fixed a bug",
+                "fix: fixed another bug"
+            ]
+        }
+    ],
+    "checkList": [
+        {
+            "_id": "671a90851ba7f65e64fe6a66",
+            "name" : "Features",
+            "format": "feat",
+            "items": [
+                {
+                    "title": "add something new",
+                    "_id": "671a8e297453e0da30c2fcaf",
+                    "checked": true
+                },
+                {
+                    "title": "add something else",
+                    "_id": "671a8e3cd770657c77307787",
+                    "checked": false
+                }
+            ]
+        },
+        {
+            "_id": "671a909c0af907bf84bbdafd",
+            "name": "Refactor",
+            "format": "refactor",
+            "items": [
+                {
+                    "title": "refactor this",
+                    "_id": "671a8e4ad46db387c538ecba",
+                    "checked": false
+                },
+                {
+                    "title": "refactor that",
+                    "_id": "671a8e59e6938f750a195890",
+                    "checked": false
+                }
+            ]
+        },
+        {
+            "_id": "671a90a53b64ec95c5d59cbd",
+            "sectionName": "Bugs",
+            "format": "fix",
+            "items": [
+                {
+                    "title": "unfuck this",
+                    "_id": "671a8e69928d3f3ac3604750",
+                    "checked": true
+                }, {
+                    "title": "unfuck that",
+                    "_id": "671a8e71f072d2c43331f72a",
+                    "checked": false
+                }
+            ]
+        }
+    ]
+}
