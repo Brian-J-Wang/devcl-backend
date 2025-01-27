@@ -97,7 +97,6 @@ public class CollectionController : ControllerBase {
     [HttpPatch("{id}/items")]
     public ActionResult UpdateTask(string id, [FromBody] IncomingCLItem item) {
         try {
-            Console.WriteLine(item.ToJson().ToString());
             CLItem response = CLCollections.UpdateTask(id, item);
 
             return Ok(response);
