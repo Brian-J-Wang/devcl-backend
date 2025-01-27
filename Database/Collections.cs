@@ -11,18 +11,6 @@ using DnsClient.Protocol;
 
 namespace DevCL.Database;
 
-public class CLDatabase {
-    IMongoCollection<CLCollection> collections;
-    public CLDatabase() {
-        Env.Load();
-
-        var mongoClient = new MongoClient(Env.GetString("DB_URL"));
-        collections = mongoClient.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
-    }
-
-
-}
-
 static class CLCollections {
 
     static FilterDefinition<CLCollection> Document(string id) {

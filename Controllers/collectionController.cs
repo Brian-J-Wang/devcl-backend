@@ -1,21 +1,29 @@
-using System.Collections.ObjectModel;
 using DevCL.Database;
 using DevCL.Database.Model;
 using DevCL.Exceptions;
 using DevCL.Requests;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace DevCL.Controllers;
 
 [ApiController]
 [Route("collections")]
 public class CollectionController : ControllerBase {
+    MongoClient client;
+    IMongoCollection<CLCollection> checklists;
+    public CollectionController(MongoClient mongoClient) {
+        client = mongoClient;
+        checklists = client.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
+    }
+
     [HttpGet("{id}")]
     public ActionResult GetCollection(string id) {
         //add verification that the person using this document is the owner of the document
         try {
-            var document = CLCollections.RetreiveDocument(id);
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            var document = checklists.Find(filter).First();
 
             return Ok(document.ToJson());
         }
