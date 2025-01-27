@@ -1,51 +1,105 @@
+using Microsoft.Extensions.ObjectPool;
+using Microsoft.VisualBasic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
+using System.ComponentModel;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace DevCL.Database.Model;
 
-public class CheckList {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
+public class CLCollection {
+    [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
     public string Id { get; set; }
-    [BsonRequired]
-    public required string owner { get; set; }
-    [BsonRequired]
-    public required string checklistName { get; set; }
-    [BsonRequired]
-    public required string version { get; set; }
+
+    [BsonRequired, BsonElement("owner"), JsonPropertyName("owner")]
+    public required string Owner { get; set; }
+
+    [BsonRequired, BsonElement("name"), JsonPropertyName("name")]
+    public required string Name { get; set; }
+
+    [BsonRequired, BsonElement("version"), JsonPropertyName("version")]
+    public required string Version { get; set; }
+
+    [BsonElement("patches"), JsonPropertyName("patches")]
     public List<PatchNotes> patchNotes = new List<PatchNotes>();
-    [BsonElement("checkList")]
-    public List<CLCategory> checkListSection = new List<CLCategory>();
+
+    [BsonElement("categories"), JsonPropertyName("categories")]
+    public List<CLCategory> Categories = new List<CLCategory>();
 }
 
 public class PatchNotes {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
+    [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
     public string Id { get; set; }
-    public string version { get; set; }
-    public List<string> content { get; set; } = new List<string>();
+
+    [BsonElement("version"), JsonPropertyName("version")]
+    public required string Version { get; set; }
+
+    [BsonElement("content"), JsonPropertyName("content")]
+    public List<string> Content { get; set; } = new List<string>();
 }
 
 public class CLCategory {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
+    [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
     public string? Id { get; set; }
-    public required string name { get; set; }
+
+    [BsonElement("name"), JsonPropertyName("name")]
+    public required string Name { get; set; }
     public required string format;
-    public List<CLItem> items { get; set; } = new List<CLItem>();
+
+    [BsonElement("items"), JsonPropertyName("items")]
+    public List<CLItem> Items { get; set; } = new List<CLItem>();
 }
 
 public class CLItem {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
+    [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id"),]
     public string? Id { get; set; }
 
-    [BsonElement("title")]
-    public string? Title { get; set; }
+    [BsonElement("blurb"), JsonPropertyName("blurb")]
+    public string? Blurb { get; set; }
 
-    [BsonDefaultValue(false)]
-    [BsonElement("checked")]
-    public bool IsChecked { get; set; } = false;
+    [BsonDefaultValue(false), BsonElement("checked"), JsonPropertyName("checked")]
+    public bool Checked { get; set; }
+}
+
+public class Identifier {
+    public Identifier(string collection, string category = "", string item = "") {
+        this.collection = collection;
+        this.category = category;
+        this.item = item;
+    }
+
+    public string collection;
+    public string category;
+    public string item;   
+}
+
+public class PatchItem {
+    [JsonPropertyName("category")]
+    public string? Category { get; set;}
+
+    [JsonPropertyName("checked")]
+    public bool? Checked { get; set; }
+
+    [JsonPropertyName("blurb")]
+    public bool? Blurb { get; set; }
+}
+
+public class PostItem {
+    [JsonPropertyName("category")]
+    public string Category { get; set; }
+
+    [JsonPropertyName("blurb")]
+    public string Blurb { get; set; }
+
+    public CLItem toCLItem() {
+        return new CLItem() {
+            Id = ObjectId.GenerateNewId().ToString(),
+            Blurb = this.Blurb,
+            Checked = false  
+        };
+    }
 }
 
 public class IncomingCLItem {
@@ -57,9 +111,12 @@ public class IncomingCLItem {
     public CLItem ToCLItem() {
         return new CLItem() {
             Id = Id ?? ObjectId.GenerateNewId().ToString(),
-            Title = Title ?? "",
-            IsChecked = IsChecked ?? false
+            Blurb = Title ?? "",
+            Checked = IsChecked ?? false
         };
     }
 }
 
+
+//property names must match the field names in the database since it's name is used 
+//generate the update builder.

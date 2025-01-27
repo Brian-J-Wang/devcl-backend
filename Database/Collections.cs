@@ -4,35 +4,52 @@ using DevCL.Database.Model;
 using DevCL.Controllers;
 using DevCL.Exceptions;
 using MongoDB.Bson;
+using DevCL.Requests;
+using Microsoft.AspNetCore.Mvc;
+using SharpCompress.Common;
+using DnsClient.Protocol;
 
 namespace DevCL.Database;
 
+public class CLDatabase {
+    IMongoCollection<CLCollection> collections;
+    public CLDatabase() {
+        Env.Load();
+
+        var mongoClient = new MongoClient(Env.GetString("DB_URL"));
+        collections = mongoClient.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
+
+        Console.WriteLine("Collection successfully retrieved");
+    }
+}
+
 static class CLCollections {
 
-    static FilterDefinition<CheckList> Document(string id) {
-        return Builders<CheckList>.Filter.Eq(d => d.Id, id);
+    static FilterDefinition<CLCollection> Document(string id) {
+        return Builders<CLCollection>.Filter.Eq(d => d.Id, id);
     }
 
-    static IMongoCollection<CheckList>? collection;
+    static IMongoCollection<CLCollection>? collection;
 
     public static void Init() {
         Env.Load();
 
         var client = new MongoClient(Env.GetString("DB_URL"));
 
-        collection = client.GetDatabase("dev_cl").GetCollection<CheckList>("collection");
+        collection = client.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
 
         Console.WriteLine("Collection successfully retrieved");
     }
+    
 
     public static void InsertNewDocument() {}
 
-    public static CheckList RetreiveDocument(string documentId) {
+    public static CLCollection RetreiveDocument(string documentId) {
         if (collection == null) {
             throw new CollectionNotInitializedException("The collection has not been initialized");
         }
 
-        var filter = Builders<CheckList>.Filter.Eq(d => d.Id, documentId);
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, documentId);
 
         var document = collection.Find(filter).First();
 
@@ -44,16 +61,16 @@ static class CLCollections {
             throw new CollectionNotInitializedException("The collection has not been initialized");
         }
 
-        var filter = Builders<CheckList>.Filter.Eq(d => d.Id, documentId);
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, documentId);
 
         var document = collection.Find(filter).First();
 
         List<string> patchItems = new List<string>();
 
-        document.checkListSection.ForEach((section) => {
-            section.items = section.items.Where((item) => {
-                if (item.IsChecked) {
-                    patchItems.Add($"{section.format}: {item.Title}");
+        document.Categories.ForEach((section) => {
+            section.Items = section.Items.Where((item) => {
+                if (item.Checked) {
+                    patchItems.Add($"{section.format}: {item.Blurb}");
                     return false;
                 } else {
                     return true;
@@ -61,19 +78,18 @@ static class CLCollections {
             }).ToList();
         });
 
+        document.Version = GetNewVersion(document.Version, patchType);
+
         PatchNotes patch = new PatchNotes() {
             Id = ObjectId.GenerateNewId().ToString(),
-            version = document.version,
-            content = patchItems
+            Version = document.Version,
+            Content = patchItems
         };
         document.patchNotes.Add(patch);
 
-        document.version = GetNewVersion(document.version, patchType);
-
-
-        var update = Builders<CheckList>.Update
-                        .Set(d => d.version, document.version)
-                        .Set(d => d.checkListSection, document.checkListSection)
+        var update = Builders<CLCollection>.Update
+                        .Set(d => d.Version, document.Version)
+                        .Set(d => d.Categories, document.Categories)
                         .Set(d => d.patchNotes, document.patchNotes);
 
         collection.UpdateOne(d => d.Id == document.Id, update);
@@ -104,14 +120,14 @@ static class CLCollections {
         }
         CLItem entry = item.ToCLItem();
 
-        var filter = Builders<CheckList>.Filter.Eq(d => d.Id, documentId);
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, documentId);
         var document = collection.Find(filter).First();
         
-        var category = document.checkListSection.Find(section => section.Id == item.Section) ?? throw new CategoryNotFoundException($"sectionId {item.Section} was not found in document {documentId}");
-        category.items.Add(entry);
+        var category = document.Categories.Find(section => section.Id == item.Section) ?? throw new CategoryNotFoundException($"sectionId {item.Section} was not found in document {documentId}");
+        category.Items.Add(entry);
 
-        var update = Builders<CheckList>.Update
-                        .Set(d => d.checkListSection, document.checkListSection);
+        var update = Builders<CLCollection>.Update
+                        .Set(d => d.Categories, document.Categories);
         collection.UpdateOne(filter, update);
 
         return entry;
@@ -123,7 +139,7 @@ static class CLCollections {
         }
 
         //declare document filter
-        var filter = Builders<CheckList>.Filter.Eq(d => d.Id, documentId);
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, documentId);
         //declare array filter
         var arrayFilter = new [] {
             new BsonDocument("section._id", ObjectId.Parse(reqItem.Section)),
@@ -134,19 +150,125 @@ static class CLCollections {
             ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList()
         };
         //declare set builder
-        var update = Builders<CheckList>.Update.Set("checkList.$[section].items.$[item].checked", reqItem.IsChecked);
+        var update = Builders<CLCollection>.Update.Set("checkList.$[section].items.$[item].checked", reqItem.IsChecked);
 
         //call coolection update
         collection.UpdateOne(filter, update, options);
 
-        Console.WriteLine("Retrieving Item");
-        var itemProjection = Builders<CheckList>.Projection.Expression(u => u.checkListSection
+        var itemProjection = Builders<CLCollection>.Projection.Expression(u => u.Categories
                         .Where(section => section.Id == reqItem.Section).First()
-                        .items.Where(item => item.Id == reqItem.Id).First());
+                        .Items.Where(item => item.Id == reqItem.Id).First());
         var item = collection.Find(filter).Project(itemProjection).First();
-        
-        Console.WriteLine(item.ToJson());
 
         return item;
+    }
+
+    public static void UpdateDocument(string documentId, CheckListPatchRequest request) {
+        if (collection == null) {
+            throw new CollectionNotInitializedException("The collection has not been initialized");
+        }
+
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, documentId);
+        var update = request.GetUpdateDefinition();
+
+        collection.UpdateOne(filter, update);
+    }
+
+    public static CLItem PatchItem(Identifier id, PatchItem item) {
+        if (collection == null) {
+            throw new CollectionNotInitializedException("The collection has not been initialized");
+        }
+
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id.collection);
+
+        var arrayFilter = new [] {
+            new BsonDocument("category._id", ObjectId.Parse(id.category)),
+            new BsonDocument("item._id", ObjectId.Parse(id.item))
+        };
+
+        var options = new UpdateOptions {
+            ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList()
+        };
+
+        var updateDef = GetUpdateDefintion(); 
+
+        collection.UpdateOne(filter, updateDef, options);
+
+        if (item.Category != null) {
+            Console.WriteLine("Changing category has not been implemented yet");
+        }
+
+        var itemProjection = Builders<CLCollection>.Projection.Expression(u => u.Categories
+                        .Where(category => category.Id == id.category).First()
+                        .Items.Where(item => item.Id == id.item).First());
+        var newItem = collection.Find(filter).Project(itemProjection).First();
+
+        return newItem;
+
+        UpdateDefinition<CLCollection> GetUpdateDefintion()
+        {
+            var builder = Builders<CLCollection>.Update.Combine();
+
+            if (item.Blurb != null)
+            {
+                builder = builder.Set("categories.$[category].items.$[item].blurb", item.Blurb);
+            }
+
+            if (item.Checked != null)
+            {
+                builder = builder.Set("categories.$[category].items.$[item].checked", item.Checked);
+            }
+
+            return builder;
+        }
+    }
+
+    public static CLItem PostItem(Identifier id, CLItem item) {
+        if (collection == null) {
+            throw new CollectionNotInitializedException("The collection has not been initialized");
+        }
+
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id.collection);
+        var document = collection.Find(filter).First();
+
+        var updateDef = Builders<CLCollection>.Update.Push("categories.$[category].items", item);
+
+        var arrayFitler = new [] {
+            new BsonDocument("category._id", ObjectId.Parse(id.category))
+        };
+
+        var options = new UpdateOptions {
+            ArrayFilters = arrayFitler.Select(bson => new BsonDocumentArrayFilterDefinition<CLCollection>(bson)).ToList()
+        };
+
+        collection.UpdateOne(filter, updateDef, options);
+
+        var itemProjection = Builders<CLCollection>.Projection.Expression(u => u.Categories
+                        .Where(category => category.Id == id.category).First()
+                        .Items.Where(item => item.Id == id.item.ToString()).First());
+        var newItem = collection.Find(filter).Project(itemProjection).First();
+
+        return newItem;
+    }
+
+    public static void DeleteItem(Identifier id) {
+        if (collection == null) {
+            throw new CollectionNotInitializedException("The collection has not been initialized");
+        }
+
+        var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id.collection);
+        var document = collection.Find(filter).First();
+
+        var updateDef = Builders<CLCollection>.Update.PullFilter("categories.$[category].items", Builders<CLItem>.Filter.Eq(i => i.Id, id.item));
+        
+        var arrayFitler = new [] {
+            new BsonDocument("category._id", ObjectId.Parse(id.category))
+        };
+
+        var options = new UpdateOptions {
+            ArrayFilters = arrayFitler.Select(bson => new BsonDocumentArrayFilterDefinition<CLCollection>(bson)).ToList()
+        };
+
+        collection.UpdateOne(filter, updateDef, options);
     }
 }
