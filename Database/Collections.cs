@@ -18,9 +18,9 @@ public class CLDatabase {
 
         var mongoClient = new MongoClient(Env.GetString("DB_URL"));
         collections = mongoClient.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
-
-        Console.WriteLine("Collection successfully retrieved");
     }
+
+
 }
 
 static class CLCollections {

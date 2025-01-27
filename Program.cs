@@ -1,4 +1,6 @@
+using DotNetEnv;
 using DevCL.Database;
+using MongoDB.Driver;
 
 namespace DevCL;
 
@@ -6,13 +8,12 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        Env.Load();
+
         CLCollections.Init();
 
         var builder = WebApplication.CreateBuilder(args);
-
-        // Add services to the container.
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddSingleton(sp => new CLDatabase());
+        builder.Services.AddSingleton(sp => new MongoClient(Env.GetString("DB_URL")));
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddControllers();
