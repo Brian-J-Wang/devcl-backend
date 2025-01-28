@@ -27,6 +27,9 @@ public class CLCollection {
 
     [BsonElement("categories"), JsonPropertyName("categories")]
     public List<CLCategory> Categories = new List<CLCategory>();
+
+    [BsonElement("items"), JsonPropertyName("items")]
+    public List<CLItem> Items { get; set; } = new List<CLItem>();
 }
 
 public class PatchNotes {
@@ -61,6 +64,9 @@ public class CLItem {
 
     [BsonDefaultValue(false), BsonElement("checked"), JsonPropertyName("checked")]
     public bool Checked { get; set; }
+
+    [BsonElement("category"), JsonPropertyName("category")]
+    public string? Category { get; set; }
 }
 
 public class Identifier {

@@ -1,19 +1,52 @@
+using System.Collections.ObjectModel;
 using System.Reflection.Metadata;
 using DevCL.Database.Model;
 using DevCL.Exceptions;
+using DnsClient.Protocol;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace DevCL.Controllers;
 
 [Route("collections/{id}/items")]
 public class ItemsController : ControllerBase {
-    MongoClient client;
     IMongoCollection<CLCollection> checklists;
     public ItemsController(MongoClient mongoClient) {
-        client = mongoClient;
-        checklists = client.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
+        checklists = mongoClient.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
+    }
+
+    [HttpGet]
+    public ActionResult GetTasks(string id) {
+        try {
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            var results = checklists.AsQueryable()
+                .Where(doc => doc.Id == id)
+                .Select(doc => new { doc.Items }).ToList();
+
+
+        }
+        catch (Exception) {
+            return StatusCode(500, "An unexpected error occured");
+        }
+    }
+
+    [HttpPost]
+    public ActionResult AddTask(string id, [FromBody] IncomingCLItem item) {
+        try {
+            CLItem entry = item.ToCLItem();
+
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
+
+            var result = checklists.UpdateOne(filter, update);
+
+            return Ok(entry);
+        }
+        catch (Exception) {
+            return StatusCode(500, "An unexpected error occured");
+        }
     }
 
     [HttpPatch]
@@ -44,10 +77,6 @@ public class ItemsController : ControllerBase {
         catch (InvalidOperationException) {
             Console.WriteLine("Something went wrong");
             return NotFound();
-        }
-        catch (CollectionNotInitializedException ex) {
-            Console.WriteLine(ex.Message);
-            return StatusCode(500, "An unexpected error occured.");
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured");
