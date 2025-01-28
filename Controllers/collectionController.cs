@@ -64,23 +64,6 @@ public class CollectionController : ControllerBase {
         throw new NotImplementedException();
     }
 
-    [HttpPost("{id}/items")]
-    public ActionResult AddNewTask(string id, [FromBody] IncomingCLItem item) {
-        try {
-            CLItem response = CLCollections.AddNewTask(id, item);
-
-            return Ok(response);
-        }
-        catch (InvalidOperationException) {
-            Console.WriteLine($"Document {id} could not be found");
-            return NotFound();
-        }
-        catch (CollectionNotInitializedException ex) {
-            Console.WriteLine(ex.Message);
-            return StatusCode(500, "An unexpected error occured.");
-        }
-    }
-
     [HttpPatch("{id}")]
     public ActionResult PatchDocument(string id, [FromBody] CheckListPatchRequest request) {
         

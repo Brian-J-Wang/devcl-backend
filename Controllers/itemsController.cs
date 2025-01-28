@@ -19,13 +19,14 @@ public class ItemsController : ControllerBase {
 
     [HttpGet]
     public ActionResult GetTasks(string id) {
+        Console.WriteLine("here");
         try {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var results = checklists.AsQueryable()
                 .Where(doc => doc.Id == id)
                 .Select(doc => new { doc.Items }).ToList();
 
-
+            return Ok(results);
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured");
@@ -79,6 +80,24 @@ public class ItemsController : ControllerBase {
             return NotFound();
         }
         catch (Exception) {
+            return StatusCode(500, "An unexpected error occured");
+        }
+    }
+
+    [HttpDelete("{postID}")]
+    public ActionResult DeleteTask(string id, string postId) {
+        try {
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            var update = Builders<CLCollection>.Update.PullFilter(
+                "items",
+                Builders<BsonDocument>.Filter.Eq("id", postId)
+            );
+
+            checklists.UpdateOne(filter, update);
+
+            return Ok(postId);
+        }
+        catch(Exception) {
             return StatusCode(500, "An unexpected error occured");
         }
     }
