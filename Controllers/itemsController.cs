@@ -4,6 +4,7 @@ using DevCL.Database.Model;
 using DevCL.Exceptions;
 using DnsClient.Protocol;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -19,7 +20,6 @@ public class ItemsController : ControllerBase {
 
     [HttpGet]
     public ActionResult GetTasks(string id) {
-        Console.WriteLine("here");
         try {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var results = checklists.AsQueryable()
@@ -50,30 +50,24 @@ public class ItemsController : ControllerBase {
         }
     }
 
-    [HttpPatch]
-    public ActionResult UpdateTask(string id, [FromBody] IncomingCLItem item) {
+    [HttpPatch("{itemId}")]
+    public ActionResult UpdateTask(string id, string itemId, [FromBody] IncomingCLItem item) {
         try {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
 
+            var update = Builders<CLCollection>.Update.Set("items.$[item].checked", item.IsChecked);
+
             var arrayFilter = new [] {
-                new BsonDocument("section._id", ObjectId.Parse(item.Section)),
-                new BsonDocument("item._id", ObjectId.Parse(item.Id))
+                new BsonDocument("item._id", ObjectId.Parse(itemId))
             };
 
             var options = new UpdateOptions {
                 ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList()
             };
 
-            var update = Builders<CLCollection>.Update.Set("checkList.$[section].items.$[item].checked", item.IsChecked);
-
             checklists.UpdateOne(filter, update, options);
 
-            var itemProjection = Builders<CLCollection>.Projection.Expression(u => u.Categories
-                        .Where(section => section.Id == item.Section).First()
-                        .Items.Where(item => item.Id == item.Id).First());
-            CLItem response = checklists.Find(filter).Project(itemProjection).First();
-
-            return Ok(response);
+            return Ok(item);
         }
         catch (InvalidOperationException) {
             Console.WriteLine("Something went wrong");

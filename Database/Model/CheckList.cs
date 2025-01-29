@@ -112,6 +112,7 @@ public class IncomingCLItem {
     public string? Id { get; set; }
     public string? Title { get; set; }
     public string? Section { get; set; }
+    [BsonElement("checked"), JsonPropertyName("checked")]
     public Boolean? IsChecked { get; set; }
 
     public CLItem ToCLItem() {
