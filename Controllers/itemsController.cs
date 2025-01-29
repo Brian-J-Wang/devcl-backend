@@ -61,13 +61,13 @@ public class ItemsController : ControllerBase {
                 new BsonDocument("item._id", ObjectId.Parse(itemId))
             };
 
-            var options = new UpdateOptions {
+            var options = new FindOneAndUpdateOptions<CLCollection> {
                 ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList()
             };
 
-            checklists.UpdateOne(filter, update, options);
+            var document = checklists.FindOneAndUpdate(filter, update, options);
 
-            return Ok(item);
+            return Ok(document.Items.Find(item => item.Id == itemId));
         }
         catch (InvalidOperationException) {
             Console.WriteLine("Something went wrong");

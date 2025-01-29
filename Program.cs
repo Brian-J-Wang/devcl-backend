@@ -19,7 +19,7 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddCors(options => {
             options.AddPolicy("AllowSpecificOrigins", policy => {
-                policy.WithOrigins("https://localhost:5173", "http://localhost:5173")
+                policy.WithOrigins("https://localhost:5174", "http://localhost:5174")
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
