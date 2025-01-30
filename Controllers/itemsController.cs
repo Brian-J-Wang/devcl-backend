@@ -38,6 +38,8 @@ public class ItemsController : ControllerBase {
         try {
             CLItem entry = item.ToCLItem();
 
+            Console.WriteLine(entry.ToJson());
+
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
 
@@ -55,7 +57,7 @@ public class ItemsController : ControllerBase {
         try {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
 
-            var update = Builders<CLCollection>.Update.Set("items.$[item].checked", item.IsChecked);
+            var update = item.GetUpdateDefinition();
 
             var arrayFilter = new [] {
                 new BsonDocument("item._id", ObjectId.Parse(itemId))

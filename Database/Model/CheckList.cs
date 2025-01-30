@@ -1,3 +1,4 @@
+using DevCL.Exceptions;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.VisualBasic;
 using MongoDB.Bson;
@@ -110,7 +111,9 @@ public class PostItem {
 
 public class IncomingCLItem {
     public string? Id { get; set; }
+    [BsonElement("blurb"), JsonPropertyName("blurb")]
     public string? Title { get; set; }
+    [BsonElement("category"), JsonPropertyName("category")]
     public string? Section { get; set; }
     [BsonElement("checked"), JsonPropertyName("checked")]
     public Boolean? IsChecked { get; set; }
@@ -119,8 +122,27 @@ public class IncomingCLItem {
         return new CLItem() {
             Id = Id ?? ObjectId.GenerateNewId().ToString(),
             Blurb = Title ?? "",
-            Checked = IsChecked ?? false
+            Checked = IsChecked ?? false,
+            Category = Section ?? "null"
         };
+    }
+
+    public UpdateDefinition<CLCollection> GetUpdateDefinition() {
+        var update = Builders<CLCollection>.Update.Combine();
+
+        if (Title != null) {
+            update = update.Set("items.$[item].blurb", Title);
+        }
+
+        if (Section != null) {
+            update = update.Set("items.$[item].category", Section);
+        }
+
+        if (IsChecked != null) {
+            update = update.Set("items.$[item].checked", IsChecked);
+        }
+
+        return update;
     }
 }
 
