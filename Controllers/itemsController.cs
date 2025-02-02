@@ -86,7 +86,7 @@ public class ItemsController : ControllerBase {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var update = Builders<CLCollection>.Update.PullFilter(
                 "items",
-                Builders<BsonDocument>.Filter.Eq("id", postId)
+                Builders<CLItem>.Filter.Eq(d => d.Id, postId)
             );
 
             checklists.UpdateOne(filter, update);
