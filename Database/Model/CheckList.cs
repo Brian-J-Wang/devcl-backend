@@ -1,11 +1,6 @@
-using DevCL.Exceptions;
-using Microsoft.Extensions.ObjectPool;
-using Microsoft.VisualBasic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using System.ComponentModel;
-using System.Reflection;
 using System.Text.Json.Serialization;
 
 namespace DevCL.Database.Model;
@@ -91,22 +86,6 @@ public class PatchItem {
 
     [JsonPropertyName("blurb")]
     public bool? Blurb { get; set; }
-}
-
-public class PostItem {
-    [JsonPropertyName("category")]
-    public string Category { get; set; }
-
-    [JsonPropertyName("blurb")]
-    public string Blurb { get; set; }
-
-    public CLItem toCLItem() {
-        return new CLItem() {
-            Id = ObjectId.GenerateNewId().ToString(),
-            Blurb = this.Blurb,
-            Checked = false  
-        };
-    }
 }
 
 public class IncomingCLItem {
