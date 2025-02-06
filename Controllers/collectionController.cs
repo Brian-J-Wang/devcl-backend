@@ -2,6 +2,7 @@ using DevCL.Database;
 using DevCL.Database.Model;
 using DevCL.Exceptions;
 using DevCL.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -16,6 +17,24 @@ public class CollectionController : ControllerBase {
     public CollectionController(MongoClient mongoClient) {
         client = mongoClient;
         checklists = client.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
+    }
+
+    [Authorize]
+    [HttpPost]
+    public ActionResult CreateNewCollection([FromBody] NewCollectionRequest request) {
+        try {
+            CLCollection collection = new CLCollection() {
+                Id = ObjectId.GenerateNewId().ToString(),
+                Owner = request.User,
+                Name = request.Name,
+                Version = "0.0.1"
+            };
+
+            return Ok();
+        }
+        catch (Exception) {
+            return StatusCode(500, "An unexpected error occured.");
+        }
     }
 
     [HttpGet("{id}")]

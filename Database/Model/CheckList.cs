@@ -1,13 +1,14 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using System.Diagnostics.Contracts;
 using System.Text.Json.Serialization;
 
 namespace DevCL.Database.Model;
 
 public class CLCollection {
     [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     [BsonRequired, BsonElement("owner"), JsonPropertyName("owner")]
     public required string Owner { get; set; }
@@ -30,7 +31,7 @@ public class CLCollection {
 
 public class PatchNotes {
     [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     [BsonElement("version"), JsonPropertyName("version")]
     public required string Version { get; set; }
@@ -125,6 +126,13 @@ public class IncomingCLItem {
     }
 }
 
+public class NewCollectionRequest {
+    [JsonPropertyName("user")]
+    public required string User { get; set; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; set; }
+}
 
 //property names must match the field names in the database since it's name is used 
 //generate the update builder.

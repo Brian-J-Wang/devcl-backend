@@ -1,6 +1,9 @@
 using DotNetEnv;
 using DevCL.Database;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace DevCL;
 
@@ -25,7 +28,28 @@ internal class Program
             });
         });
 
+        builder.Services.AddAuthentication(cfg => {
+            cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            cfg.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(x => {
+            x.RequireHttpsMetadata = false;
+            x.SaveToken = false;
+            x.TokenValidationParameters = new TokenValidationParameters {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8
+                    .GetBytes(Env.GetString("JWT_SECRET").ToArray())
+                ),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
         var app = builder.Build();
+
+        Console.WriteLine(BCrypt.Net.BCrypt.GenerateSalt());
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -34,6 +58,7 @@ internal class Program
             app.UseSwaggerUI();
         }
 
+        app.UseAuthentication();
         app.UseHttpsRedirection();
         app.UseCors("AllowSpecificOrigins");
         app.MapControllers();

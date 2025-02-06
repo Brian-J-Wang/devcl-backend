@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using DotNetEnv;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -33,7 +32,7 @@ public class SignUpUser {
             Id = ObjectId.GenerateNewId(),
             Email = Email,
             Username = Username,
-            Password = BCrypt.Net.BCrypt.HashPassword(Password, Env.GetString("SALT"))
+            Password = BCrypt.Net.BCrypt.HashPassword(Password)
         };
     }
 }
