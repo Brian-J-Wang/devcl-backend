@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using System.Security.Claims;
+using MongoDB.Bson;
+using DevCL.Extensions.JWT;
 
 [ApiController]
 [Route("users")]
@@ -14,15 +16,28 @@ public class UserController : ControllerBase {
     JwtSecurityTokenHandler tokenHandler;
     string secret;
 
-    public UserController(MongoClient mongoClient) {
+    public UserController(MongoClient mongoClient, JwtSecurityTokenHandler handler) {
         userCollection = mongoClient.GetDatabase("dev_cl").GetCollection<User>("users");
-        tokenHandler = new JwtSecurityTokenHandler();
+        tokenHandler = handler;
         secret = Env.GetString("JWT_SECRET");
     }
 
     [HttpGet]
     public ActionResult GetUser([FromHeader] string authorization) {
-        return Ok();
+        try {
+            string userId = tokenHandler.ExtractUserId(authorization);
+                
+            var filter = Builders<User>.Filter.Eq(d => d.Id, ObjectId.Parse(userId));
+            var user = userCollection.Find(filter).First();
+
+            return Ok(new {
+                _id = user.Id.ToString(),
+                username = user.Username
+            });
+        }
+        catch (Exception) {
+            return StatusCode(500, "Something Went Wrong");
+        }
     }
 
     [HttpPost("signin")]

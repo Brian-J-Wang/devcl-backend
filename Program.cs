@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace DevCL;
 
@@ -17,6 +18,7 @@ internal class Program
 
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddSingleton(sp => new MongoClient(Env.GetString("DB_URL")));
+        builder.Services.AddSingleton(sp => new JwtSecurityTokenHandler());
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddControllers();

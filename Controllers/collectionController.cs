@@ -1,12 +1,13 @@
+using System.IdentityModel.Tokens.Jwt;
 using DevCL.Database;
 using DevCL.Database.Model;
 using DevCL.Exceptions;
+using DevCL.Extensions.JWT;
 using DevCL.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Connections;
 
 namespace DevCL.Controllers;
 
@@ -15,18 +16,36 @@ namespace DevCL.Controllers;
 public class CollectionController : ControllerBase {
     MongoClient client;
     IMongoCollection<CLCollection> checklists;
-    public CollectionController(MongoClient mongoClient) {
+    JwtSecurityTokenHandler tokenHandler;
+    public CollectionController(MongoClient mongoClient, JwtSecurityTokenHandler handler) {
         client = mongoClient;
         checklists = client.GetDatabase("dev_cl").GetCollection<CLCollection>("collection");
+        tokenHandler = handler;
+    }
+
+    [Authorize]
+    [HttpGet]
+    public ActionResult GetUserCollections([FromHeader] string authorization) {
+        try {
+            string userId = tokenHandler.ExtractUserId(authorization);
+
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Owner, userId);
+            var userCollections = checklists.Find(filter);
+
+            return Ok(userCollections.ToList());
+        }
+        catch (System.Exception)
+        {
+            
+            throw;
+        }
     }
 
     [Authorize]
     [HttpPost]
     public ActionResult CreateNewCollection([FromBody] NewCollectionRequest request) {
-        try {
-
-            Console.WriteLine("tests");
-
+        try 
+        {
             CLCollection collection = new CLCollection() {
                 Id = ObjectId.GenerateNewId().ToString(),
                 Owner = request.User,
