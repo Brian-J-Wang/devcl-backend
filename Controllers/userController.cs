@@ -22,7 +22,6 @@ public class UserController : ControllerBase {
 
     [HttpGet]
     public ActionResult GetUser([FromHeader] string authorization) {
-        Console.WriteLine(authorization);
         return Ok();
     }
 

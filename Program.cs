@@ -49,8 +49,6 @@ internal class Program
 
         var app = builder.Build();
 
-        Console.WriteLine(BCrypt.Net.BCrypt.GenerateSalt());
-
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -58,7 +56,7 @@ internal class Program
             app.UseSwaggerUI();
         }
 
-        app.UseAuthentication();
+        app.UseAuthorization();
         app.UseHttpsRedirection();
         app.UseCors("AllowSpecificOrigins");
         app.MapControllers();

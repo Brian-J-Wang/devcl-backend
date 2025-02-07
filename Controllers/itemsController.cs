@@ -37,9 +37,7 @@ public class ItemsController : ControllerBase {
     public ActionResult AddTask(string id, [FromBody] IncomingCLItem item) {
         try {
             CLItem entry = item.ToCLItem();
-
-            Console.WriteLine(entry.ToJson());
-
+            
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
 

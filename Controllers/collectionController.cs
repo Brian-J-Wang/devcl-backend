@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Connections;
 
 namespace DevCL.Controllers;
 
@@ -23,6 +24,9 @@ public class CollectionController : ControllerBase {
     [HttpPost]
     public ActionResult CreateNewCollection([FromBody] NewCollectionRequest request) {
         try {
+
+            Console.WriteLine("tests");
+
             CLCollection collection = new CLCollection() {
                 Id = ObjectId.GenerateNewId().ToString(),
                 Owner = request.User,
@@ -30,7 +34,7 @@ public class CollectionController : ControllerBase {
                 Version = "0.0.1"
             };
 
-            return Ok();
+            return Ok(collection);
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured.");
