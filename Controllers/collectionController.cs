@@ -43,17 +43,21 @@ public class CollectionController : ControllerBase {
 
     [Authorize]
     [HttpPost]
-    public ActionResult CreateNewCollection([FromBody] NewCollectionRequest request) {
+    public ActionResult CreateNewCollection([FromHeader] string authorization, [FromBody] NewCollectionRequest request) {
         try 
         {
+            string userId = tokenHandler.ExtractUserId(authorization);
+
             CLCollection collection = new CLCollection() {
                 Id = ObjectId.GenerateNewId().ToString(),
-                Owner = request.User,
-                Name = request.Name,
+                Owner = userId,
+                Name = request.Title,
                 Version = "0.0.1"
             };
 
-            return Ok(collection);
+            checklists.InsertOne(collection);
+
+            return Ok(collection.ToJson());
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured.");

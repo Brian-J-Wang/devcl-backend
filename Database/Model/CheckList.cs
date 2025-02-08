@@ -127,11 +127,8 @@ public class IncomingCLItem {
 }
 
 public class NewCollectionRequest {
-    [JsonPropertyName("user")]
-    public required string User { get; set; }
-
-    [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    [JsonPropertyName("title")]
+    public required string Title { get; set; }
 }
 
 //property names must match the field names in the database since it's name is used 

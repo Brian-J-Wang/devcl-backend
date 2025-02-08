@@ -37,7 +37,7 @@ public class ItemsController : ControllerBase {
     public ActionResult AddTask(string id, [FromBody] IncomingCLItem item) {
         try {
             CLItem entry = item.ToCLItem();
-            
+
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
 
@@ -62,7 +62,8 @@ public class ItemsController : ControllerBase {
             };
 
             var options = new FindOneAndUpdateOptions<CLCollection> {
-                ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList()
+                ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList(),
+                ReturnDocument = ReturnDocument.After
             };
 
             var document = checklists.FindOneAndUpdate(filter, update, options);
