@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IdentityModel.Tokens.Jwt;
 using DevCL.Database;
 using DevCL.Database.Model;
@@ -58,6 +59,25 @@ public class CollectionController : ControllerBase {
             checklists.InsertOne(collection);
 
             return Ok(collection.ToJson());
+        }
+        catch (Exception) {
+            return StatusCode(500, "An unexpected error occured.");
+        }
+    }
+
+    [Authorize]
+    [HttpDelete("{id}")]
+    public ActionResult DeleteCollection(string id) {
+        try {
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            var document = checklists.FindOneAndDelete(filter);
+            if (document != null) {
+                return Ok(new {
+                    id = document.Id
+                });
+            } else {
+                return NotFound();
+            }
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured.");
