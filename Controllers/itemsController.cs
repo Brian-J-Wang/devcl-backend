@@ -1,16 +1,12 @@
-using System.Collections.ObjectModel;
-using System.Reflection.Metadata;
 using DevCL.Database.Model;
-using DevCL.Exceptions;
-using DnsClient.Protocol;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
 namespace DevCL.Controllers;
 
+[ApiController]
 [Route("collections/{id}/items")]
 public class ItemsController : ControllerBase {
     IMongoCollection<CLCollection> checklists;

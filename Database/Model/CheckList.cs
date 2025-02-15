@@ -27,6 +27,9 @@ public class CLCollection {
 
     [BsonElement("items"), JsonPropertyName("items")]
     public List<CLItem> Items { get; set; } = new List<CLItem>();
+    
+    [BsonElement("collaborators"), JsonPropertyName("collaborators")]
+    public List<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
 }
 
 public class PatchNotes {
@@ -41,6 +44,7 @@ public class PatchNotes {
 }
 
 public class CLCategory {
+
     [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
     public string? Id { get; set; }
 
@@ -64,6 +68,14 @@ public class CLItem {
 
     [BsonElement("category"), JsonPropertyName("category")]
     public string? Category { get; set; }
+}
+
+public class Collaborator {
+    [BsonElement("alias"), JsonPropertyName("alias")]
+    public string Alias { get; set; }
+
+    [BsonElement("email"), JsonPropertyName("email")]
+    public string Email { get; set; }
 }
 
 public class Identifier {
