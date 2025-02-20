@@ -40,20 +40,22 @@ public class CollaboratorController : ControllerBase {
             Console.WriteLine($"{alias}, {email}");
 
             var userFilter = Builders<User>.Filter.Eq(d => d.Email, email);
-            
+
             var userDocument = users.Find(userFilter);
 
             Collaborator collaborator = new Collaborator() {
                 Alias = alias,
-                Email = userDocument.Any() ? email : ""
+                Email = email,
+                Id = userDocument.Any() ? userDocument.First().Id.ToString() : ""
             };
-            // var update = Builders<CLCollection>.Update.Push(d => d.Collaborators, collaborator);
+            var update = Builders<CLCollection>.Update.Push(d => d.Collaborators, collaborator);
 
-            // var result = checklists.UpdateOne(filter, update);
-        
-            // Console.WriteLine(collaborator.ToJson());
+            var result = checklists.UpdateOne(filter, update);
 
-            return Ok();
+            return Ok(new {
+                alias,
+                email
+            });
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured");
@@ -62,9 +64,24 @@ public class CollaboratorController : ControllerBase {
 
     [Authorize]
     [HttpDelete]
-    public ActionResult RemoveCollaborator(string id, [FromHeader] string authorization, [FromBody] dynamic request) {
+    public ActionResult RemoveCollaborator(string id, [FromHeader] string authorization, [FromBody] JsonDocument request) {
         try {
-            //*all collaborators are removed via their aliases
+            string userId = tokenHandler.ExtractUserId(authorization);
+            string alias = request.RootElement.GetProperty("alias").ToString();
+
+            var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            var document = checklists.Find(filter).First();
+
+            if (document.Owner != userId) {
+                return Unauthorized();
+            }
+
+            var update = Builders<CLCollection>.Update.PullFilter(
+                "collaborators",
+                Builders<Collaborator>.Filter.Eq(d => d.Alias, alias)
+            );
+
+            checklists.UpdateOne(filter, update);
 
             return Ok();
         } catch (Exception) {

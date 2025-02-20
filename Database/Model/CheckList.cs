@@ -30,6 +30,14 @@ public class CLCollection {
     
     [BsonElement("collaborators"), JsonPropertyName("collaborators")]
     public List<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
+
+    public Boolean isCollaborator(string id) {
+        var user = Collaborators.Find((Collaborator) => {
+            return Collaborator.Id == id;
+        });
+
+        return user != null;
+    }
 }
 
 public class PatchNotes {
@@ -71,6 +79,9 @@ public class CLItem {
 }
 
 public class Collaborator {
+    [BsonRepresentation(BsonType.String), JsonPropertyName("_id")]
+    public string Id { get; set; }
+
     [BsonElement("alias"), JsonPropertyName("alias")]
     public string Alias { get; set; }
 
