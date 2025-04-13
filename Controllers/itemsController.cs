@@ -29,17 +29,44 @@ public class ItemsController : ControllerBase {
         }
     }
 
+    
+    // public ActionResult AddTask(string id, [FromBody] IncomingCLItem item) {
+    //     try {
+    //         CLItem entry = item.ToCLItem();
+
+    //         var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+    //         var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
+
+    //         var result = checklists.UpdateOne(filter, update);
+
+    //         return Ok(entry);
+    //     }
+    //     catch (Exception) {
+    //         return StatusCode(500, "An unexpected error occured");
+    //     }
+    // }
+
     [HttpPost]
-    public ActionResult AddTask(string id, [FromBody] IncomingCLItem item) {
+    public ActionResult AddTask(string id, [FromBody] CLTask item) {
         try {
-            CLItem entry = item.ToCLItem();
+            if (!item.SatisfiesPostRequirement()) {
+                return BadRequest();
+            }
+
+            item.GenerateId();
 
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
-            var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
+            var update = Builders<CLCollection>.Update.Push(d => d.Items, item);
 
             var result = checklists.UpdateOne(filter, update);
 
-            return Ok(entry);
+            return Ok(item);
+            // if (!item.SatisfiesPostRequirement()) {
+            //     throw new Exception();
+            // }
+
+            // var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            // var update = Builders<CLCollection>.Update.Push
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured");
@@ -47,30 +74,35 @@ public class ItemsController : ControllerBase {
     }
 
     [HttpPatch("{itemId}")]
-    public ActionResult UpdateTask(string id, string itemId, [FromBody] IncomingCLItem item) {
+    public ActionResult UpdateTask(string id, string itemId, [FromBody] CLTask item) {
         try {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
+            
+            var document = checklists.Find(filter).FirstOrDefault();
+            
+            if (document == null) return NotFound();
+            
+            var targetItems = document.Items.Find((item) => item.Id == itemId);
+            if (targetItems == null ) return NotFound();
 
-            var update = item.GetUpdateDefinition();
+            foreach (KeyValuePair<string, object> kvp in item.Attributes) {
+                if (targetItems.Attributes.ContainsKey(kvp.Key)) {
+                    targetItems.Attributes[kvp.Key] = kvp.Value;
+                } else {
+                    targetItems.Attributes.Add(kvp.Key, kvp.Value);
+                }
+            }
 
-            var arrayFilter = new [] {
-                new BsonDocument("item._id", ObjectId.Parse(itemId))
-            };
+            checklists.ReplaceOne(filter, document);
 
-            var options = new FindOneAndUpdateOptions<CLCollection> {
-                ArrayFilters = arrayFilter.Select(bson => new BsonDocumentArrayFilterDefinition<BsonDocument>(bson)).ToList(),
-                ReturnDocument = ReturnDocument.After
-            };
-
-            var document = checklists.FindOneAndUpdate(filter, update, options);
-
-            return Ok(document.Items.Find(item => item.Id == itemId));
+            return Ok(item);
         }
         catch (InvalidOperationException) {
             Console.WriteLine("Something went wrong");
             return NotFound();
         }
-        catch (Exception) {
+        catch (Exception ex) {
+            Console.WriteLine(ex.Message);
             return StatusCode(500, "An unexpected error occured");
         }
     }

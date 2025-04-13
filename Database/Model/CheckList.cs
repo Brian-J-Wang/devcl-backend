@@ -26,7 +26,7 @@ public class CLCollection {
     public List<CLCategory> Categories = new List<CLCategory>();
 
     [BsonElement("items"), JsonPropertyName("items")]
-    public List<CLItem> Items { get; set; } = new List<CLItem>();
+    public List<CLTask> Items { get; set; } = new List<CLTask>();
     
     [BsonElement("collaborators"), JsonPropertyName("collaborators")]
     public List<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
@@ -146,6 +146,35 @@ public class IncomingCLItem {
         }
 
         return update;
+    }
+}
+
+public class Attribute {
+    public required string Name { get; set; }
+    public required dynamic Value { get; set; }
+}
+
+public class CLTask {
+    [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id"),]
+    public string? Id { get; set; }
+
+    [BsonElement("blurb"), JsonPropertyName("blurb")]
+    public string? Blurb { get; set; }
+
+    [BsonElement("attributes"), JsonPropertyName("attributes")]
+    public Dictionary<string, object> Attributes { get; set; } = new Dictionary<string, object>();
+
+    public Boolean SatisfiesPostRequirement() {
+        return Blurb != null;
+    }
+
+    public Boolean SatisfiesDeleteRequirements() {
+        return Id != null;
+    }
+
+    public CLTask GenerateId() {
+        Id = Id ?? ObjectId.GenerateNewId().ToString();
+        return this;
     }
 }
 

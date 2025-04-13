@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using MongoDB.Bson.Serialization;
+using System.Text.Json;
 
 namespace DevCL;
 
@@ -15,6 +17,7 @@ internal class Program
         Env.Load();
 
         CLCollections.Init();
+
 
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddSingleton(sp => new MongoClient(Env.GetString("DB_URL")));
@@ -49,6 +52,9 @@ internal class Program
             };
         });
 
+        BsonSerializer.RegisterSerializer(new ObjectDictionarySerializer());
+        BsonSerializer.RegisterSerializer(new JsonElementSerializer());
+        
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
