@@ -29,23 +29,6 @@ public class ItemsController : ControllerBase {
         }
     }
 
-    
-    // public ActionResult AddTask(string id, [FromBody] IncomingCLItem item) {
-    //     try {
-    //         CLItem entry = item.ToCLItem();
-
-    //         var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
-    //         var update = Builders<CLCollection>.Update.Push(d => d.Items, entry);
-
-    //         var result = checklists.UpdateOne(filter, update);
-
-    //         return Ok(entry);
-    //     }
-    //     catch (Exception) {
-    //         return StatusCode(500, "An unexpected error occured");
-    //     }
-    // }
-
     [HttpPost]
     public ActionResult AddTask(string id, [FromBody] CLTask item) {
         try {
@@ -61,12 +44,6 @@ public class ItemsController : ControllerBase {
             var result = checklists.UpdateOne(filter, update);
 
             return Ok(item);
-            // if (!item.SatisfiesPostRequirement()) {
-            //     throw new Exception();
-            // }
-
-            // var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
-            // var update = Builders<CLCollection>.Update.Push
         }
         catch (Exception) {
             return StatusCode(500, "An unexpected error occured");
