@@ -32,11 +32,17 @@ public class ItemsController : ControllerBase {
     [HttpPost]
     public ActionResult AddTask(string id, [FromBody] CLTask item) {
         try {
-            if (!item.SatisfiesPostRequirement()) {
+            if (!item.SatisfiesPostRequirement())
+            {
                 return BadRequest();
             }
-
+            
             item.GenerateId();
+
+            item.Attributes.ForEach((attribute) =>
+            {
+                Console.WriteLine(attribute.Key, attribute.Value);
+            });
 
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             var update = Builders<CLCollection>.Update.Push(d => d.Items, item);
@@ -55,22 +61,26 @@ public class ItemsController : ControllerBase {
         try {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             
-            var document = checklists.Find(filter).FirstOrDefault();
+            var collection = checklists.Find(filter).FirstOrDefault();
             
-            if (document == null) return NotFound();
+            if (collection == null) return NotFound();
             
-            var targetItems = document.Items.Find((item) => item.Id == itemId);
+            var targetItems = collection.Items.Find((item) => item.Id == itemId);
             if (targetItems == null ) return NotFound();
 
-            foreach (KeyValuePair<string, object> kvp in item.Attributes) {
-                if (targetItems.Attributes.ContainsKey(kvp.Key)) {
-                    targetItems.Attributes[kvp.Key] = kvp.Value;
-                } else {
-                    targetItems.Attributes.Add(kvp.Key, kvp.Value);
-                }
+            Console.WriteLine(item);
+
+            if (item.Status != null)
+            {
+                targetItems.Status = item.Status;
             }
 
-            checklists.ReplaceOne(filter, document);
+            if (item.Attributes != null)
+            {
+                targetItems.Attributes = item.Attributes;
+            }
+
+            checklists.ReplaceOne(filter, collection);
 
             return Ok(item);
         }

@@ -2,6 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using System.Diagnostics.Contracts;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace DevCL.Database.Model;
@@ -150,29 +151,46 @@ public class IncomingCLItem {
 }
 
 public class Attribute {
-    public required string Name { get; set; }
-    public required dynamic Value { get; set; }
+    [BsonElement("key"), JsonPropertyName("key")]
+    public required string Key { get; set; }
+
+    [BsonElement("value"), JsonPropertyName("value")]
+    public required string Value { get; set; }
 }
 
-public class CLTask {
+public enum TaskStatus
+{
+    incomplete,
+    inprogress,
+    complete
+}
+
+public class CLTask
+{
     [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id"),]
     public string? Id { get; set; }
 
     [BsonElement("blurb"), JsonPropertyName("blurb")]
     public string? Blurb { get; set; }
 
-    [BsonElement("attributes"), JsonPropertyName("attributes")]
-    public Dictionary<string, object> Attributes { get; set; } = new Dictionary<string, object>();
+    [BsonElement("status"), JsonPropertyName("status")]
+    public string Status { get; set; } = "incomplete";
 
-    public Boolean SatisfiesPostRequirement() {
+    [BsonElement("attributes"), JsonPropertyName("attributes")]
+    public List<Attribute> Attributes { get; set; } = new List<Attribute>();
+
+    public Boolean SatisfiesPostRequirement()
+    {
         return Blurb != null;
     }
 
-    public Boolean SatisfiesDeleteRequirements() {
+    public Boolean SatisfiesDeleteRequirements()
+    {
         return Id != null;
     }
 
-    public CLTask GenerateId() {
+    public CLTask GenerateId()
+    {
         Id = Id ?? ObjectId.GenerateNewId().ToString();
         return this;
     }

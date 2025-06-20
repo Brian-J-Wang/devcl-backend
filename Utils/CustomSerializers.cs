@@ -12,7 +12,8 @@ public class ObjectDictionarySerializer : IBsonSerializer<Dictionary<string, obj
 
         Dictionary<string, object> result = new Dictionary<string, object>();
 
-        foreach (var element in bsonDocument.Elements) {
+        foreach (var element in bsonDocument.Elements)
+        {
             result[element.Name] = BsonTypeMapper.MapToDotNetValue(element.Value);
         }
 
@@ -23,7 +24,8 @@ public class ObjectDictionarySerializer : IBsonSerializer<Dictionary<string, obj
     {
         var bsonDocument = new BsonDocument();
 
-        foreach (var kvp in value) {
+        foreach (var kvp in value)
+        {
             bsonDocument.Add(new BsonElement(kvp.Key, BsonValue.Create(kvp.Value)));
         }
 
@@ -34,10 +36,12 @@ public class ObjectDictionarySerializer : IBsonSerializer<Dictionary<string, obj
     {
         var bsonDocument = new BsonDocument();
 
-        foreach (var kvp in value as Dictionary<string, object> ?? new Dictionary<string, object>()) {
+        foreach (var kvp in value as Dictionary<string, object> ?? new Dictionary<string, object>())
+        {
             dynamic bsonValue = kvp.Value;
-            if (kvp.Value.GetType() == typeof(JsonElement)) {
-                bsonValue = ConvertJsonElementToBsonValue((JsonElement) kvp.Value);
+            if (kvp.Value.GetType() == typeof(JsonElement))
+            {
+                bsonValue = ConvertJsonElementToBsonValue((JsonElement)kvp.Value);
             }
             bsonDocument.Add(new BsonElement(kvp.Key, BsonValue.Create(bsonValue)));
         }
@@ -66,7 +70,7 @@ public class ObjectDictionarySerializer : IBsonSerializer<Dictionary<string, obj
                     return new BsonInt32(intValue);
                 else if (jsonElement.TryGetDouble(out double doubleValue))
                     return new BsonDouble(doubleValue);
-                else return new BsonDouble((double) jsonElement.GetDecimal()); // In case it's a decimal
+                else return new BsonDouble((double)jsonElement.GetDecimal()); // In case it's a decimal
             case JsonValueKind.True:
             case JsonValueKind.False:
                 return new BsonBoolean(jsonElement.GetBoolean());
@@ -77,7 +81,6 @@ public class ObjectDictionarySerializer : IBsonSerializer<Dictionary<string, obj
         }
     }
 }
-
 
 public class JsonElementSerializer : IBsonSerializer<JsonElement>
 {

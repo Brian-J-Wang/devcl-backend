@@ -1,0 +1,66 @@
+.env
+bin
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]ssets/
+[Ll]ogs/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.sln.ide
+*.sln.docstates
+*.vscode/
+
+# Rider files
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/
+
+# Backup & temporary files
+*.bak
+*.tmp
+*.temp
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+**/packages/
+*.nuspec
+
+# DotNet
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.dotnet/
+*.dSYM/
+
+# Secrets
+*.env
+*.local
+*.user secrets
+
+# Other files
+*.db
+*.sql
+*.log
+*.pdb
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+#distribution
+dist
