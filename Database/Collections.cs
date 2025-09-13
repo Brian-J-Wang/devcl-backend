@@ -122,7 +122,8 @@ static class CLCollections {
     }
 
     public static CLItem UpdateTask(string documentId, IncomingCLItem reqItem) {
-        if (collection == null) {
+        if (collection == null)
+        {
             throw new CollectionNotInitializedException("The collection has not been initialized");
         }
 
@@ -152,7 +153,9 @@ static class CLCollections {
     }
 
     public static void UpdateDocument(string documentId, CheckListPatchRequest request) {
-        if (collection == null) {
+        
+        if (collection == null)
+        {
             throw new CollectionNotInitializedException("The collection has not been initialized");
         }
 
@@ -163,7 +166,9 @@ static class CLCollections {
     }
 
     public static CLItem PatchItem(Identifier id, PatchItem item) {
-        if (collection == null) {
+        
+        if (collection == null)
+        {
             throw new CollectionNotInitializedException("The collection has not been initialized");
         }
 

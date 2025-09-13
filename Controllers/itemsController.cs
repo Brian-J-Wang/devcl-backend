@@ -62,26 +62,33 @@ public class ItemsController : ControllerBase {
             var filter = Builders<CLCollection>.Filter.Eq(d => d.Id, id);
             
             var collection = checklists.Find(filter).FirstOrDefault();
-            
             if (collection == null) return NotFound();
             
-            var targetItems = collection.Items.Find((item) => item.Id == itemId);
-            if (targetItems == null ) return NotFound();
-
-            Console.WriteLine(item);
+            var targetTask = collection.Items.Find((item) => item.Id == itemId);
+            if (targetTask == null ) return NotFound();
 
             if (item.Status != null)
             {
-                targetItems.Status = item.Status;
+                targetTask.Status = item.Status;
             }
 
             if (item.Attributes != null)
             {
-                targetItems.Attributes = item.Attributes;
+                item.Attributes.ForEach((targetAttribute) =>
+                {
+                    var attribute = targetTask.Attributes.Find(attribute => attribute == targetAttribute);
+                    if (attribute != null)
+                    {
+                        targetTask.Attributes.Add(targetAttribute);
+                    }
+                    else
+                    {
+                        attribute = targetAttribute;
+                    }
+                });
             }
-
             checklists.ReplaceOne(filter, collection);
-
+            
             return Ok(item);
         }
         catch (InvalidOperationException) {
