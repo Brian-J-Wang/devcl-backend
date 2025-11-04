@@ -12,26 +12,19 @@ using DevCL.Extensions.JWT;
 [ApiController]
 [Route("users")]
 public class UserController : ControllerBase {
-    IMongoCollection<User> userCollection;
-    JwtSecurityTokenHandler tokenHandler;
-    string secret;
+    UserService userService;
 
-    public UserController(MongoClient mongoClient, JwtSecurityTokenHandler handler) {
-        userCollection = mongoClient.GetDatabase("dev_cl").GetCollection<User>("users");
-        tokenHandler = handler;
-        secret = Env.GetString("JWT_SECRET");
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     [HttpGet]
     public ActionResult GetUser([FromHeader] string authorization) {
         try {
-            string userId = tokenHandler.ExtractUserId(authorization);
-                
-            var filter = Builders<User>.Filter.Eq(d => d.Id, ObjectId.Parse(userId));
-            var user = userCollection.Find(filter).First();
+            var user = userService.getUserById(authorization);
 
             return Ok(new {
-                _id = user.Id.ToString(),
+                _id = user.Id,
                 username = user.Username
             });
         }
@@ -43,74 +36,28 @@ public class UserController : ControllerBase {
     [HttpPost("signin")]
     public ActionResult SignIn([FromBody] SignInUser user) {
         try {
-            var filter = Builders<User>.Filter.Eq(d => d.Email, user.Email);
-
-            var result = userCollection.Find(filter);
-            if (!result.Any()) {
-                return BadRequest("Incorrect Email or Password");
-            }
-
-            var document = result.First();
-
-            if (BCrypt.Net.BCrypt.Verify(user.Password, document.Password)) {
-                return Ok(new {
-                    jwt = GenerateJWT(document.Id.ToString(), document.Username),
-                    _id = document.Id.ToString(),
-                    username = document.Username
-                });    
-            } else {
-                return BadRequest("Incorrect Email or Password");
-            }
+            var document = userService.signInUser(user.Email, user.Password);
+            return Ok(new {
+                jwt = document.Jwt,
+                _id = document.Id,
+                username = document.Username
+            });
         }
         catch (Exception ex) {
             Console.WriteLine(ex);
             return StatusCode(500, "Something Went Wrong");
         }
     }
-
-    protected string GenerateJWT(string id, string username) {
-        var claims = new List<Claim> {
-            new Claim("username", username),
-            new Claim("id", id)
-        };
-
-        var jwtToken = new JwtSecurityToken(
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddDays(30),
-            signingCredentials: new SigningCredentials(
-                new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(secret.ToArray())
-                ),
-                SecurityAlgorithms.HmacSha256Signature
-            )
-        );
-
-        return tokenHandler.WriteToken(jwtToken);
-    }
-
+    
     [HttpPost("signup")]
     public ActionResult SignUp([FromBody] SignUpUser user) {
         try {
-
-            var filter = Builders<User>.Filter.Eq(d => d.Email, user.Email);
-            bool exists = userCollection.Find(filter).Any();
-
-            if (exists) {
-                throw new DocumentAlreadyExistsException("Email already exists");
-            }
-
-            var document = user.ToUser();
-
-            userCollection.InsertOne(document);
+            var document = userService.signUpUser(user);
 
             return Ok(new {
-                _id = document.Id.ToString(),
+                _id = document.Id,
                 username = document.Username
             });
-        }
-        catch(DocumentAlreadyExistsException) {
-            return BadRequest("Email already exists");
         }
         catch(Exception ex) {
             Console.WriteLine(ex);

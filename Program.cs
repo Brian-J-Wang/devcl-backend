@@ -6,7 +6,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using MongoDB.Bson.Serialization;
-using System.Text.Json;
+using configs;
+using DevCl.Services;
+using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 namespace DevCL;
 
@@ -16,15 +19,42 @@ internal class Program
     {
         Env.Load();
 
-        CLCollections.Init();
-
-
         var builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddSingleton(sp => new MongoClient(Env.GetString("DB_URL")));
+        builder.Services.Configure<MongoDbSettings>(setting =>
+        {
+            setting.ConnectionString = Env.GetString("DB_URL");
+        });
+
         builder.Services.AddSingleton(sp => new JwtSecurityTokenHandler());
+        builder.Services.AddSingleton<MongoDbContext>();
+        builder.Services.AddSingleton<TaskService>();
+        builder.Services.AddSingleton<CollectionService>();
+        builder.Services.AddSingleton<UserService>();
+
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-        builder.Services.AddControllers();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
+            c.AddSecurityDefinition("Bearer", new()
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter a valid token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "Bearer"
+            });
+            c.AddSecurityRequirement(new()
+            {
+                {
+                    new() { Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
+                    new string[] {}
+                }
+            });
+        });
+        builder.Services.AddControllers().AddJsonOptions(opts => {
+            opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
         builder.Services.AddCors(options => {
             options.AddPolicy("AllowSpecificOrigins", policy => {
                 policy.WithOrigins("https://localhost:5173", "http://localhost:5173")
