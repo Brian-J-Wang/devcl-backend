@@ -10,6 +10,8 @@ using configs;
 using DevCl.Services;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
+
 
 namespace DevCL;
 
@@ -18,6 +20,10 @@ internal class Program
     private static void Main(string[] args)
     {
         Env.Load();
+
+        ConventionRegistry.Register("camelCase", new ConventionPack {
+            new CamelCaseElementNameConvention()
+        }, _ => true);
 
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.Configure<MongoDbSettings>(setting =>
