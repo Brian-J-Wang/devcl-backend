@@ -4,25 +4,30 @@ using DevCL.Database.Model;
 using MongoDB.Driver;
 using DevCL.Controllers;
 
-public class CollectionService {
+public record GetTaskDocByUserDTO(string Id, string Name, string Owner, string Version); 
+
+public class TaskDocService {
     readonly IMongoCollection<TasksDoc> collection;
     readonly JwtSecurityTokenHandler jwtService;
-    public CollectionService(MongoDbContext context, JwtSecurityTokenHandler jwt) {
+    public TaskDocService(MongoDbContext context, JwtSecurityTokenHandler jwt) {
         collection = context.Collection;
         jwtService = jwt;
     }
 
-    public TasksDoc GetDocument(string docuId) {
+    public TasksDoc GetTaskDoc(string docuId) {
         var doc = collection.Find(doc => doc.Id == docuId).FirstOrDefault() ?? throw new KeyNotFoundException($"document with id:{docuId} not found");
         return doc;
     }
-    
-    public List<TasksDoc> GetDocumentsByUser(string authToken) {
+
+    public List<GetTaskDocByUserDTO> GetTaskDocsByUser(string authToken) {
         string userId = jwtService.ExtractUserId(authToken);
-        return collection.Find(doc => doc.Owner == userId).ToList();
+        return [.. collection.Find(doc => doc.Owner == userId).ToList().Select(taskDoc => new GetTaskDocByUserDTO(taskDoc.Id,
+            taskDoc.Name,
+            taskDoc.Owner,
+            taskDoc.Version))];
     }
 
-    public TasksDoc AddNewDocument(string authToken, NewCollectionRequest request) {
+    public TasksDoc AddNewTaskDoc(string authToken, NewCollectionRequest request) {
         string userId = jwtService.ExtractUserId(authToken);
         TasksDoc document = new TasksDoc() {
             Owner = userId,
@@ -33,12 +38,12 @@ public class CollectionService {
         return document;
     }
 
-    public void DeleteDocument(string authToken, string docuId) {
+    public void DeleteTaskDoc(string authToken, string docuId) {
         string userId = jwtService.ExtractUserId(authToken);
         collection.DeleteOne(doc => doc.Id == docuId && doc.Owner == userId);
     }
 
     public void updateDocumentVersion(PatchType type) {
-        
+
     }
 }

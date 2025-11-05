@@ -1,13 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
-using DevCL.Exceptions;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using DotNetEnv;
-using System.Security.Claims;
-using MongoDB.Bson;
-using DevCL.Extensions.JWT;
 
 [ApiController]
 [Route("users")]
@@ -22,11 +13,7 @@ public class UserController : ControllerBase {
     public ActionResult GetUser([FromHeader] string authorization) {
         try {
             var user = userService.getUserById(authorization);
-
-            return Ok(new {
-                _id = user.Id,
-                username = user.Username
-            });
+            return Ok(user);
         }
         catch (Exception) {
             return StatusCode(500, "Something Went Wrong");
@@ -37,11 +24,7 @@ public class UserController : ControllerBase {
     public ActionResult SignIn([FromBody] SignInUser user) {
         try {
             var document = userService.signInUser(user.Email, user.Password);
-            return Ok(new {
-                jwt = document.Jwt,
-                _id = document.Id,
-                username = document.Username
-            });
+            return Ok(document);
         }
         catch (Exception ex) {
             Console.WriteLine(ex);
@@ -53,11 +36,7 @@ public class UserController : ControllerBase {
     public ActionResult SignUp([FromBody] SignUpUser user) {
         try {
             var document = userService.signUpUser(user);
-
-            return Ok(new {
-                _id = document.Id,
-                username = document.Username
-            });
+            return Ok(document);
         }
         catch(Exception ex) {
             Console.WriteLine(ex);

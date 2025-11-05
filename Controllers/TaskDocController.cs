@@ -9,42 +9,44 @@ using MongoDB.Bson;
 namespace DevCL.Controllers;
 
 [ApiController]
-[Route("collections")]
-public class CollectionController : ControllerBase {
-    CollectionService collectionService;
+[Route("taskDocs")]
+public class TaskDocController : ControllerBase {
+    TaskDocService collectionService;
 
-    public CollectionController(CollectionService collectionService) {
+    public TaskDocController(TaskDocService collectionService) {
         this.collectionService = collectionService;
     }
 
     [Authorize]
     [HttpGet]
-    public ActionResult GetUserCollections([FromHeader] string authorization) {
+    public ActionResult GetUserTaskDocs([FromHeader] string authorization) {
         try {
-            var userList = collectionService.GetDocumentsByUser(authorization);
+            var userList = collectionService.GetTaskDocsByUser(authorization);
             return Ok(userList);
         }
-        catch(Exception) {
+        catch(Exception ex) {
+            Console.WriteLine(ex);
             return StatusCode(500, "An unexpected error occured.");
         }
     }
 
     [Authorize]
     [HttpPost]
-    public ActionResult CreateNewCollection([FromHeader] string authorization, [FromBody] NewCollectionRequest request) {
+    public ActionResult CreateNewTaskDoc([FromHeader] string authorization, [FromBody] NewCollectionRequest request) {
         try {
-            var doc = collectionService.AddNewDocument(authorization, request);
+            var doc = collectionService.AddNewTaskDoc(authorization, request);
             return Ok(doc.ToJson());
         }
-        catch (Exception) {
+        catch (Exception ex) {
+            Console.WriteLine(ex);
             return StatusCode(500, "An unexpected error occured.");
         }
     }
     
     [HttpGet("{docuId}")]
-    public ActionResult GetCollection(string docuId) {
+    public ActionResult GetTaskDoc(string docuId) {
         try {
-            var doc = collectionService.GetDocument(docuId);
+            var doc = collectionService.GetTaskDoc(docuId);
             return Ok(doc.ToJson());
         }
         catch (Exception) {
@@ -54,9 +56,9 @@ public class CollectionController : ControllerBase {
 
     [Authorize]
     [HttpDelete("{id}")]
-    public ActionResult DeleteCollection([FromHeader] string authorization, string docuId) {
+    public ActionResult DeleteTaskDoc([FromHeader] string authorization, string docuId) {
         try {
-            collectionService.DeleteDocument(authorization, docuId);
+            collectionService.DeleteTaskDoc(authorization, docuId);
             return Ok(new {
                     id = docuId
                 });

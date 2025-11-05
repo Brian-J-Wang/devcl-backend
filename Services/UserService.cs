@@ -30,7 +30,9 @@ public class UserService {
     public UserSignIn signInUser(string email, string password) {
         var user = users.Find(user => user.Email == email).FirstOrDefault();
 
-        Console.WriteLine(user.Password);
+        if (user == null) {
+            throw new Exception("user not found");
+        }
 
         if (BCrypt.Net.BCrypt.Verify(password, user.Password)) {
             return new UserSignIn(GenerateJWT(user.Id, user.Username), user.Id, user.Username);

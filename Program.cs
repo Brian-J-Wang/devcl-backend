@@ -21,6 +21,7 @@ internal class Program
     {
         Env.Load();
 
+        //converts class fields into camelCase for MongoDB
         ConventionRegistry.Register("camelCase", new ConventionPack {
             new CamelCaseElementNameConvention()
         }, _ => true);
@@ -34,30 +35,8 @@ internal class Program
         builder.Services.AddSingleton(sp => new JwtSecurityTokenHandler());
         builder.Services.AddSingleton<MongoDbContext>();
         builder.Services.AddSingleton<TaskService>();
-        builder.Services.AddSingleton<CollectionService>();
+        builder.Services.AddSingleton<TaskDocService>();
         builder.Services.AddSingleton<UserService>();
-
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
-            c.AddSecurityDefinition("Bearer", new()
-            {
-                In = ParameterLocation.Header,
-                Description = "Please enter a valid token",
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                BearerFormat = "JWT",
-                Scheme = "Bearer"
-            });
-            c.AddSecurityRequirement(new()
-            {
-                {
-                    new() { Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
-                    new string[] {}
-                }
-            });
-        });
         builder.Services.AddControllers().AddJsonOptions(opts => {
             opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
@@ -90,19 +69,40 @@ internal class Program
 
         BsonSerializer.RegisterSerializer(new ObjectDictionarySerializer());
         BsonSerializer.RegisterSerializer(new JsonElementSerializer());
-        
+
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(c => {
+            c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
+            c.AddSecurityDefinition("Bearer", new() {
+                In = ParameterLocation.Header,
+                Description = "Please enter a valid token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "Bearer"
+            });
+            c.AddSecurityRequirement(new()
+            {
+                {
+                    new() { Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
+                    new string[] {}
+                }
+            });
+        });
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
+        if (app.Environment.IsDevelopment()) {
+            
             app.UseSwagger();
             app.UseSwaggerUI();
         }
 
-        app.UseAuthorization();
         app.UseHttpsRedirection();
         app.UseCors("AllowSpecificOrigins");
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapControllers();
 
         app.Run();

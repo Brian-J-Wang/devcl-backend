@@ -16,9 +16,11 @@ public class TaskController : ControllerBase {
     [HttpGet]
     public ActionResult GetTasks(string docuId) {
         try {
-            return Ok(taskService.GetTasksFromCollection(docuId));
+            var tasks = taskService.GetTasksFromCollection(docuId);
+            return Ok(tasks);
         }
-        catch (Exception) {
+        catch (Exception ex) {
+            Console.WriteLine(ex);
             return StatusCode(500, "An unexpected error occured");
         }
     }
@@ -27,7 +29,6 @@ public class TaskController : ControllerBase {
     public ActionResult AddTask(string docuId, [FromBody] PostTaskItem item) {
         try {
             var result = taskService.AddTask(docuId, item);
-
             return Ok(result);
         }
         catch (Exception) {
@@ -36,9 +37,10 @@ public class TaskController : ControllerBase {
     }
 
     [HttpPatch("{itemId}")]
-    public ActionResult UpdateTask(string id, string itemId, [FromBody] CLTask item) {
+    public ActionResult UpdateTask(string itemId, [FromBody] UpdateTaskItem item) {
         try {
-            return Ok();
+            var result = taskService.UpdateTask(itemId, item);
+            return Ok(result);
         }
         catch (InvalidOperationException) {
             Console.WriteLine("Something went wrong");
@@ -54,7 +56,6 @@ public class TaskController : ControllerBase {
     public ActionResult DeleteTask(string postId) {
         try {
             taskService.DeleteTask(postId);
-
             return Ok(postId);
         }
         catch(Exception) {

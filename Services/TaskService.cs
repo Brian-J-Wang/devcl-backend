@@ -25,4 +25,13 @@ public class TaskService {
         var result = tasks.DeleteOne(task => task.Id == itemId);
         return result.DeletedCount == 1;
     }
+
+    public TaskItem UpdateTask(string itemId, UpdateTaskItem task) {
+        var result = tasks.FindOneAndUpdate(item => item.Id == itemId, task.GetUpdateDefinition(), new FindOneAndUpdateOptions<TaskItem> {
+            ReturnDocument = ReturnDocument.After,
+            IsUpsert = false
+        });
+
+        return result;
+    }
 }

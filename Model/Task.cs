@@ -21,7 +21,7 @@ public class TaskItem {
     [BsonElement("blurb"), JsonPropertyName("blurb")]
     public string Blurb { get; set; } = "";
 
-    [BsonDefaultValue(Status.incomplete), BsonElement("checked"), JsonPropertyName("checked")]
+    [BsonDefaultValue(Status.incomplete)]
     public Status Status { get; set; } = Status.incomplete;
 
     public TaskItem WithTaskDocId(string taskDocId) {
@@ -32,15 +32,23 @@ public class TaskItem {
 
 public class UpdateTaskItem {
     public string Id { get; } = "";
-    public string? Blurb;
+    public string? Blurb { get; set; }
+    public Status? Status { get; set; }
 
     public UpdateDefinition<TaskItem> GetUpdateDefinition() {
         var update = Builders<TaskItem>.Update.Combine();
 
-        if (Blurb != null) {
-            update = update.Set("blurb", Blurb);
-        }
+        foreach (var prop in typeof(UpdateTaskItem).GetProperties()) {
+            if (prop.Name == "Id") {
+                continue;
+            }
 
+            var value = prop.GetValue(this);
+            if (value != null) {
+                update = update.Set(prop.Name, value);
+            }
+        }
+        
         return update;
     }
 }

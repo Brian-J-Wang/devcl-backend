@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace DevCL.Database.Model;
 
+[BsonIgnoreExtraElements]
 public class TasksDoc {
     [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
@@ -20,7 +21,7 @@ public class TasksDoc {
 
     [BsonRequired, BsonElement("version"), JsonPropertyName("version")]
     public string Version { get; set; } = "0.0.1";
-    
+
     [BsonElement("collaborators"), JsonPropertyName("collaborators")]
     public List<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
 }
