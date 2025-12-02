@@ -1,5 +1,4 @@
 using DevCL.Database.Model;
-using DevCL.Exceptions;
 
 using DevCL.Requests;
 using Microsoft.AspNetCore.Authorization;

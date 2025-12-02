@@ -1,5 +1,8 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using DevCL.Utils.Converters;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
@@ -18,22 +21,27 @@ public class TaskItem {
     [BsonRepresentation(BsonType.ObjectId), BsonElement("taskDocId"), JsonPropertyName("taskDocId")]
     public required string TaskDocId { get; set; }
 
-    [BsonElement("blurb"), JsonPropertyName("blurb")]
+    [Updateable]
     public string Blurb { get; set; } = "";
 
-    [BsonDefaultValue(Status.incomplete)]
+    [BsonDefaultValue(Status.incomplete), Updateable]
     public Status Status { get; set; } = Status.incomplete;
-
+    [BsonElement("attributes"), JsonPropertyName("attributes")]
+    public List<TaskAttribute> Attributes { get; set; } = new List<TaskAttribute>();
+    [Updateable]
+    public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
+ 
     public TaskItem WithTaskDocId(string taskDocId) {
         TaskDocId = taskDocId;
         return this;
     }
 }
 
-public class UpdateTaskItem {
+public class UpdateTaskItem : IUpdateDefintion<TaskItem> {
     public string Id { get; } = "";
     public string? Blurb { get; set; }
     public Status? Status { get; set; }
+    public List<SubTask>? SubTasks { get; set; }
 
     public UpdateDefinition<TaskItem> GetUpdateDefinition() {
         var update = Builders<TaskItem>.Update.Combine();
@@ -53,17 +61,47 @@ public class UpdateTaskItem {
     }
 }
 
+public enum UpdateType {
+    add,
+    remove,
+    update
+}
+
+public class UpdateNugget {
+    public string PropertyName { get; set; } = "";
+    public JsonElement Value { get; set; }
+    public UpdateType UpdateType { get; set; }
+}
+
 public class PostTaskItem {
     public string Id { get; } = ObjectId.GenerateNewId().ToString();
     
     [BsonElement("blurb"), JsonPropertyName("blurb")]
     public required string Blurb { get; set; }
+    
+    public List<TaskAttribute> Attributes { get; set; } = new List<TaskAttribute>();
 
     public TaskItem ToTaskItem() {
         return new TaskItem() {
             Id = Id,
             TaskDocId = "",
-            Blurb = Blurb
+            Blurb = Blurb,
         };
     }
+}
+
+public class TaskAttribute {
+    public required string Id { get; set; }
+    [BsonElement("value"), BsonSerializer(typeof(JsonElementSerializer))]
+    public required JsonElement Value { get; set; }
+}
+
+public enum SubTaskState {
+    complete,
+    incomplete
+}
+
+public class SubTask {
+    public required string Blurb { get; set; }
+    public required SubTaskState State { get; set;}
 }

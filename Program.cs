@@ -1,6 +1,4 @@
 using DotNetEnv;
-using DevCL.Database;
-using MongoDB.Driver;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -11,7 +9,7 @@ using DevCl.Services;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
-
+using DevCL.Utils.Converters;
 
 namespace DevCL;
 
@@ -37,6 +35,7 @@ internal class Program
         builder.Services.AddSingleton<TaskService>();
         builder.Services.AddSingleton<TaskDocService>();
         builder.Services.AddSingleton<UserService>();
+        builder.Services.AddSingleton<AttributeService>();
         builder.Services.AddControllers().AddJsonOptions(opts => {
             opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
@@ -92,6 +91,10 @@ internal class Program
 
         var app = builder.Build();
 
+        using (var scope = app.Services.CreateScope()) {
+            Initialization.SeedAttributesDB(scope.ServiceProvider.GetRequiredService<AttributeService>());
+        }
+        
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment()) {
             
@@ -106,5 +109,6 @@ internal class Program
         app.MapControllers();
 
         app.Run();
+
     }
 }

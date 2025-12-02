@@ -10,7 +10,7 @@ namespace DevCL.Controllers;
 public class TaskController : ControllerBase {
     TaskService taskService;
     public TaskController(TaskService taskService) {
-        this.taskService = taskService; 
+        this.taskService = taskService;
     }
 
     [HttpGet]
@@ -31,18 +31,25 @@ public class TaskController : ControllerBase {
             var result = taskService.AddTask(docuId, item);
             return Ok(result);
         }
-        catch (Exception) {
+        catch (Exception ex) {
+            Console.WriteLine(ex);
+
             return StatusCode(500, "An unexpected error occured");
         }
     }
 
     [HttpPatch("{itemId}")]
-    public ActionResult UpdateTask(string itemId, [FromBody] UpdateTaskItem item) {
+    public ActionResult UpdateTask(string itemId, [FromBody] List<UpdateNugget> nuggets) {
         try {
-            var result = taskService.UpdateTask(itemId, item);
+            if (nuggets.Count == 0) {
+                throw new Exception();
+            }
+            
+            var result = taskService.UpdateTask(itemId, nuggets);
             return Ok(result);
         }
-        catch (InvalidOperationException) {
+        catch (InvalidOperationException ex) {
+            Console.WriteLine(ex.Message);
             Console.WriteLine("Something went wrong");
             return NotFound();
         }
