@@ -14,7 +14,7 @@ public class MongoDbContext
         db = client.GetDatabase("dev_cl");
     }
 
-    public IMongoCollection<TasksDoc> Collection => db.GetCollection<TasksDoc>("collection");
+    public IMongoCollection<Project> Collection => db.GetCollection<Project>("collection");
     public IMongoCollection<User> Users => db.GetCollection<User>("users");
     public IMongoCollection<TaskItem> Tasks => db.GetCollection<TaskItem>("tasks");
     public IMongoCollection<Attribute> Attributes => db.GetCollection<Attribute>("attributes");

@@ -9,18 +9,18 @@ namespace DevCL.Controllers;
 
 [ApiController]
 [Route("taskDocs")]
-public class TaskDocController : ControllerBase {
+public class ProjectController : ControllerBase {
     TaskDocService collectionService;
 
-    public TaskDocController(TaskDocService collectionService) {
+    public ProjectController(TaskDocService collectionService) {
         this.collectionService = collectionService;
     }
 
     [Authorize]
     [HttpGet]
-    public ActionResult GetUserTaskDocs([FromHeader] string authorization) {
+    public ActionResult GetUserProjects([FromHeader] string authorization) {
         try {
-            var userList = collectionService.GetTaskDocsByUser(authorization);
+            var userList = collectionService.GetUserProjects(authorization);
             return Ok(userList);
         }
         catch(Exception ex) {
@@ -31,9 +31,9 @@ public class TaskDocController : ControllerBase {
 
     [Authorize]
     [HttpPost]
-    public ActionResult CreateNewTaskDoc([FromHeader] string authorization, [FromBody] NewCollectionRequest request) {
+    public ActionResult CreateNewProject([FromHeader] string authorization, [FromBody] NewProjectRequest request) {
         try {
-            var doc = collectionService.AddNewTaskDoc(authorization, request);
+            var doc = collectionService.CreateNewProject(authorization, request);
             return Ok(doc.ToJson());
         }
         catch (Exception ex) {
@@ -43,7 +43,7 @@ public class TaskDocController : ControllerBase {
     }
     
     [HttpGet("{docuId}")]
-    public ActionResult GetTaskDoc(string docuId) {
+    public ActionResult GetProject(string docuId) {
         try {
             var doc = collectionService.GetTaskDoc(docuId);
             return Ok(doc.ToJson());
@@ -54,12 +54,13 @@ public class TaskDocController : ControllerBase {
     }
 
     [Authorize]
-    [HttpDelete("{id}")]
-    public ActionResult DeleteTaskDoc([FromHeader] string authorization, string docuId) {
+    [HttpDelete("{projectId}")]
+    public ActionResult DeleteProject([FromHeader] string authorization, string projectId) {
         try {
-            collectionService.DeleteTaskDoc(authorization, docuId);
+            Console.WriteLine(projectId);
+            collectionService.DeleteProject(authorization, projectId);
             return Ok(new {
-                    id = docuId
+                    id = projectId
                 });
         }
         catch (Exception) {

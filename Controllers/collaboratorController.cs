@@ -11,11 +11,11 @@ namespace DevCL.Controllers;
 [ApiController]
 [Route("collections/{id}/collaborators")]
 public class CollaboratorController : ControllerBase {
-    IMongoCollection<TasksDoc> checklists;
+    IMongoCollection<Project> checklists;
     IMongoCollection<User> users;
     JwtSecurityTokenHandler tokenHandler;
     public CollaboratorController(MongoClient mongoClient, JwtSecurityTokenHandler handler) {
-        checklists = mongoClient.GetDatabase("dev_cl").GetCollection<TasksDoc>("collection");
+        checklists = mongoClient.GetDatabase("dev_cl").GetCollection<Project>("collection");
         users = mongoClient.GetDatabase("dev_cl").GetCollection<User>("users");
         tokenHandler = handler;
     }
@@ -30,7 +30,7 @@ public class CollaboratorController : ControllerBase {
 
 
             //only the owner of the collection can add collaborators
-            var filter = Builders<TasksDoc>.Filter.Eq(d => d.Id, id);
+            var filter = Builders<Project>.Filter.Eq(d => d.Id, id);
             var document = checklists.Find(filter).First();
 
             if (document.Owner != userId) {
@@ -48,7 +48,7 @@ public class CollaboratorController : ControllerBase {
                 Email = email,
                 Id = userDocument.Any() ? userDocument.First().Id.ToString() : ""
             };
-            var update = Builders<TasksDoc>.Update.Push(d => d.Collaborators, collaborator);
+            var update = Builders<Project>.Update.Push(d => d.Collaborators, collaborator);
 
             var result = checklists.UpdateOne(filter, update);
 
@@ -69,14 +69,14 @@ public class CollaboratorController : ControllerBase {
             string userId = tokenHandler.ExtractUserId(authorization);
             string alias = request.RootElement.GetProperty("alias").ToString();
 
-            var filter = Builders<TasksDoc>.Filter.Eq(d => d.Id, id);
+            var filter = Builders<Project>.Filter.Eq(d => d.Id, id);
             var document = checklists.Find(filter).First();
 
             if (document.Owner != userId) {
                 return Unauthorized();
             }
 
-            var update = Builders<TasksDoc>.Update.PullFilter(
+            var update = Builders<Project>.Update.PullFilter(
                 "collaborators",
                 Builders<Collaborator>.Filter.Eq(d => d.Alias, alias)
             );

@@ -3,43 +3,42 @@ using DevCL.Extensions.JWT;
 using DevCL.Database.Model;
 using MongoDB.Driver;
 using DevCL.Controllers;
-using System.ComponentModel;
 
-public record GetTaskDocByUserDTO(string Id, string Name, string Owner, string Version); 
+public record GetUserProjects(string Id, string Name, string Owner, string Version); 
 
 public class TaskDocService {
-    readonly IMongoCollection<TasksDoc> collection;
+    readonly IMongoCollection<Project> collection;
     readonly JwtSecurityTokenHandler jwtService;
     public TaskDocService(MongoDbContext context, JwtSecurityTokenHandler jwt) {
         collection = context.Collection;
         jwtService = jwt;
     }
 
-    public TasksDoc GetTaskDoc(string docuId) {
+    public Project GetTaskDoc(string docuId) {
         var doc = collection.Find(doc => doc.Id == docuId).FirstOrDefault() ?? throw new KeyNotFoundException($"document with id:{docuId} not found");
         return doc;
     }
 
-    public List<GetTaskDocByUserDTO> GetTaskDocsByUser(string authToken) {
+    public List<GetUserProjects> GetUserProjects(string authToken) {
         string userId = jwtService.ExtractUserId(authToken);
-        return [.. collection.Find(doc => doc.Owner == userId).ToList().Select(taskDoc => new GetTaskDocByUserDTO(taskDoc.Id,
+        return [.. collection.Find(doc => doc.Owner == userId).ToList().Select(taskDoc => new GetUserProjects(taskDoc.Id,
             taskDoc.Name,
             taskDoc.Owner,
             taskDoc.Version))];
     }
 
-    public TasksDoc AddNewTaskDoc(string authToken, NewCollectionRequest request) {
+    public Project CreateNewProject(string authToken, NewProjectRequest request) {
         string userId = jwtService.ExtractUserId(authToken);
-        TasksDoc document = new TasksDoc() {
+        Project project = new Project() {
             Owner = userId,
-            Name = request.Title,
+            Name = request.Name,
         };
-        collection.InsertOne(document);
+        collection.InsertOne(project);
 
-        return document;
+        return project;
     }
 
-    public void DeleteTaskDoc(string authToken, string docuId) {
+    public void DeleteProject(string authToken, string docuId) {
         string userId = jwtService.ExtractUserId(authToken);
         collection.DeleteOne(doc => doc.Id == docuId && doc.Owner == userId);
     }

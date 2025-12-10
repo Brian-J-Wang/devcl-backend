@@ -3,7 +3,7 @@ using DevCL.Database.Model;
 
 namespace DevCL.Requests;
 
-public class CheckListPatchRequest : PatchRequest<TasksDoc> {
+public class CheckListPatchRequest : PatchRequest<Project> {
     [JsonPropertyName("name")]
     public string? checklistName { get; set; }
 }
