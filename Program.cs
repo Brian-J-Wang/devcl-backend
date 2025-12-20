@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using DevCL.Utils.Converters;
+using System.Text.Json;
 
 namespace DevCL;
 
@@ -38,6 +39,7 @@ internal class Program
         builder.Services.AddSingleton<AttributeService>();
         builder.Services.AddControllers().AddJsonOptions(opts => {
             opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            opts.JsonSerializerOptions.Converters.Add(new ObjectIdToJsonSerializer());
         });
         builder.Services.AddCors(options => {
             options.AddPolicy("AllowSpecificOrigins", policy => {
@@ -69,6 +71,7 @@ internal class Program
         BsonSerializer.RegisterSerializer(new ObjectDictionarySerializer());
         BsonSerializer.RegisterSerializer(new JsonElementSerializer());
 
+
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c => {
             c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
@@ -90,11 +93,9 @@ internal class Program
         });
 
         var app = builder.Build();
-
         using (var scope = app.Services.CreateScope()) {
             Initialization.SeedAttributesDB(scope.ServiceProvider.GetRequiredService<AttributeService>());
         }
-        
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment()) {
             
@@ -103,6 +104,12 @@ internal class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseExceptionHandler("/error");
+        app.MapGet("/error", () =>
+        {
+            return Results.Problem("An unexpected error occurred.");
+        });
+
         app.UseCors("AllowSpecificOrigins");
         app.UseAuthentication();
         app.UseAuthorization();

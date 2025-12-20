@@ -17,6 +17,6 @@ public class MongoDbContext
     public IMongoCollection<Project> Collection => db.GetCollection<Project>("collection");
     public IMongoCollection<User> Users => db.GetCollection<User>("users");
     public IMongoCollection<TaskItem> Tasks => db.GetCollection<TaskItem>("tasks");
-    public IMongoCollection<Attribute> Attributes => db.GetCollection<Attribute>("attributes");
-    public IMongoCollection<Attribute> SharedAttributes => db.GetCollection<Attribute>("shared_attributes");
+    public IMongoCollection<BaseAttribute> Attributes => db.GetCollection<BaseAttribute>("attributes");
+    public IMongoCollection<BaseAttribute> SharedAttributes => db.GetCollection<BaseAttribute>("shared_attributes");
 }

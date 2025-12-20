@@ -1,5 +1,4 @@
 using DevCl.Services;
-using DevCL.Database.Model;
 using DevCL.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,30 +32,20 @@ public class TaskController : ControllerBase {
         }
         catch (Exception ex) {
             Console.WriteLine(ex);
-
             return StatusCode(500, "An unexpected error occured");
         }
     }
 
+    [HttpPost("{taskId}")]
+    public ActionResult ReplaceTask(string taskId, [FromBody] TaskItem task) {
+        var result = taskService.ReplaceTask(taskId, task);
+        return Ok(result);
+    }
+
     [HttpPatch("{itemId}")]
     public ActionResult UpdateTask(string itemId, [FromBody] List<UpdateNugget> nuggets) {
-        try {
-            if (nuggets.Count == 0) {
-                throw new Exception();
-            }
-            
-            var result = taskService.UpdateTask(itemId, nuggets);
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex) {
-            Console.WriteLine(ex.Message);
-            Console.WriteLine("Something went wrong");
-            return NotFound();
-        }
-        catch (Exception ex) {
-            Console.WriteLine(ex.Message);
-            return StatusCode(500, "An unexpected error occured");
-        }
+        var result = taskService.UpdateTask(itemId, nuggets);
+        return Ok(result);
     }
 
     [HttpDelete("{postID}")]

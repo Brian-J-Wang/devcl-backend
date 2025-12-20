@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using DevCL.Model;
+using MongoDB.Bson;
 
 namespace DevCl.Services;
 
@@ -18,11 +19,12 @@ public class TaskService {
     public TaskItem AddTask(string docuId, PostTaskItem task) {
         var taskItem = task.ToTaskItem().WithTaskDocId(docuId);
 
-        HashSet<string> recordedAttribute = new HashSet<string>();
+        HashSet<ObjectId> recordedAttribute = new HashSet<ObjectId>();
         taskItem.Attributes = task.Attributes.Where((attribute) => {
             if (recordedAttribute.Contains(attribute.Id)) {
                 return false;
             } else if (attributeService.ValidateTaskAttribute(attribute)) {
+                Console.WriteLine("passed validation");
                 recordedAttribute.Add(attribute.Id);
                 return true;
             } else {
@@ -36,13 +38,21 @@ public class TaskService {
     }
 
     //returns true if task was found and removed, otherwise false
-    public Boolean DeleteTask(string itemId) {
+    public bool DeleteTask(string itemId) {
         var result = tasks.DeleteOne(task => task.Id == itemId);
         return result.DeletedCount == 1;
     }
 
+    public TaskItem ReplaceTask(string taskId, TaskItem taskItem) {
+        var task = tasks.FindOneAndReplace(task => task.Id == taskId, taskItem, new FindOneAndReplaceOptions<TaskItem, TaskItem> {
+            ReturnDocument = ReturnDocument.After,
+            IsUpsert = false
+        });
+        
+        return task;
+    }
+
     public TaskItem UpdateTask(string itemId, List<UpdateNugget> nuggets) {
-        Console.WriteLine(tasks.Find(doc => doc.Id == itemId).First());
         var result = tasks.FindOneAndUpdate(item => item.Id == itemId, BuildUpdateDefinition(nuggets), new FindOneAndUpdateOptions<TaskItem> {
             ReturnDocument = ReturnDocument.After,
             IsUpsert = false
@@ -52,7 +62,7 @@ public class TaskService {
     }
 
     UpdateDefinition<TaskItem> BuildUpdateDefinition(List<UpdateNugget> nuggets) {
-         var update = Builders<TaskItem>.Update.Combine();
+        var update = Builders<TaskItem>.Update.Combine();
 
         foreach (var nugget in nuggets) {
             var propertyName = nugget.PropertyName.ToCharArray();

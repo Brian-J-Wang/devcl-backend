@@ -3,38 +3,38 @@ using DevCL.Model;
 using MongoDB.Driver;
 
 public class AttributeService {
-    IMongoCollection<Attribute> userAttributes;
-    IMongoCollection<Attribute> sharedAttribute;
+    IMongoCollection<BaseAttribute> projectAttributes;
+    IMongoCollection<BaseAttribute> templateAttributes;
     public AttributeService(MongoDbContext context) {
-        userAttributes = context.Attributes;
-        sharedAttribute = context.SharedAttributes;
+        projectAttributes = context.Attributes;
+        templateAttributes = context.SharedAttributes;
     }
 
-    public Attribute AddSharedAttribute(Attribute attribute) {
-        var result = sharedAttribute.FindOneAndReplace(
-            Builders<Attribute>.Filter.Eq(d => d.Id, attribute.Id),
+    public BaseAttribute AddSharedAttribute(BaseAttribute attribute) {
+        var result = templateAttributes.FindOneAndReplace(
+            Builders<BaseAttribute>.Filter.Eq(d => d.Id, attribute.Id),
             attribute,
-            new FindOneAndReplaceOptions<Attribute> { IsUpsert = true });
+            new FindOneAndReplaceOptions<BaseAttribute> { IsUpsert = true });
 
         return result;
     }
 
     public void ClearSharedCollection() {
-        sharedAttribute.DeleteMany(FilterDefinition<Attribute>.Empty);
+        templateAttributes.DeleteMany(FilterDefinition<BaseAttribute>.Empty);
     }
 
-    public IEnumerable<Attribute> GetAttributes(string docuId) {
-        var shared = sharedAttribute.Find(FilterDefinition<Attribute>.Empty).ToEnumerable();
+    public IEnumerable<BaseAttribute> GetAttributes(string docuId) {
+        var shared = templateAttributes.Find(FilterDefinition<BaseAttribute>.Empty).ToEnumerable();
         return shared;
     }
 
     public bool ValidateTaskAttribute(TaskAttribute taskAttribute) {
-        var attributeDoc = sharedAttribute.Find((attribute) => attribute.Id == taskAttribute.Id).FirstOrDefault();
+        var attributeDoc = templateAttributes.Find((attribute) => attribute.Id == taskAttribute.Id).FirstOrDefault();
 
         if (attributeDoc == null) {
             return false;
         }
 
-        return attributeDoc.isValidAttribute(taskAttribute);
+        return attributeDoc.isValidAttributeValue(taskAttribute);
     }
 }

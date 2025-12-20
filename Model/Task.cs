@@ -15,7 +15,7 @@ public enum Status {
 }
 
 public class TaskItem {
-    [BsonId, BsonRepresentation(BsonType.ObjectId), JsonPropertyName("_id")]
+    [BsonId, BsonRepresentation(BsonType.ObjectId), BsonElement("_id"), JsonPropertyName("_id")]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
     [BsonRepresentation(BsonType.ObjectId), BsonElement("taskDocId"), JsonPropertyName("taskDocId")]
@@ -91,7 +91,7 @@ public class PostTaskItem {
 }
 
 public class TaskAttribute {
-    public required string Id { get; set; }
+    public ObjectId Id { get; set; }
     [BsonElement("value"), BsonSerializer(typeof(JsonElementSerializer))]
     public required JsonElement Value { get; set; }
 }
@@ -102,6 +102,8 @@ public enum SubTaskState {
 }
 
 public class SubTask {
+    [BsonRepresentation(BsonType.ObjectId)]
+    public required ObjectId Id { get; set; } = ObjectId.GenerateNewId();
     public required string Blurb { get; set; }
     public required SubTaskState State { get; set;}
 }

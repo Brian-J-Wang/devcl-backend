@@ -49,6 +49,7 @@ public class ProjectController : ControllerBase {
             return Ok(doc.ToJson());
         }
         catch (Exception) {
+            
             return StatusCode(500, "An unexpected error occured.");
         }
     }
